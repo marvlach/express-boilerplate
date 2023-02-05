@@ -1,0 +1,66 @@
+version: '3.4'
+
+services:
+  backend:
+    image: expressboilerplate
+    environment:
+      NODE_ENV: production
+
+  postgres:
+    image: postgres:latest
+    restart: unless-stopped
+    ports:
+      - '${POSTGRES_PORT?Variable not set}:${POSTGRES_PORT?Variable not set}'
+    command: '-p ${POSTGRES_PORT?Variable not set}'
+    env_file:
+      - .env
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+
+  pgadmin4:
+    image: dpage/pgadmin4:latest
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - '${PGADMIN_PORT?Variable not set}:${PGADMIN_PORT?Variable not set}'
+    env_file:
+      - .env
+    command: '-p ${PGADMIN_PORT?Variable not set}'
+    environment:
+      - 'PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL?Variable not set}'
+      - 'PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD?Variable not set}'
+      - 'PGADMIN_LISTEN_PORT=${PGADMIN_PORT?Variable not set}'
+    volumes:
+      - pgadmin4_data:/var/lib/pgadmin
+
+  redis:
+    image: redis:latest
+    command:
+      'redis-server --save 100 1 --loglevel warning --requirepass ${REDIS_PASSWORD?Variable not set} --port ${REDIS_PORT?Variable
+      not set}'
+    restart: unless-stopped
+    ports:
+      - '${REDIS_PORT?Variable not set}:${REDIS_PORT?Variable not set}'
+    volumes:
+      - redis_data:/data
+
+  rediscmd:
+    image: 'rediscommander/redis-commander:latest'
+    restart: 'unless-stopped'
+    ports:
+      - '${REDIS_COMMANDER_PORT?Variable not set}:${REDIS_COMMANDER_PORT?Variable not set}'
+    depends_on:
+      - redis
+    environment:
+      - 'REDIS_HOST=redis'
+      - 'REDIS_HOSTS=local:redis:${REDIS_PORT?Variable not set}'
+      - 'REDIS_PORT=${REDIS_PORT?Variable not set}'
+      - 'REDIS_PASSWORD=${REDIS_PASSWORD?Variable not set}'
+      - 'HTTP_USER=${REDIS_COMMANDER_USER?Variable not set}'
+      - 'HTTP_PASSWORD=${REDIS_COMMANDER_PASSWORD?Variable not set}'
+
+volumes:
+  postgresql_data: null
+  pgadmin4_data: null
+  redis_data: null

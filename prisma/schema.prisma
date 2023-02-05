@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 
+//model Post {
+//  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+//  createdAt DateTime @default(now())
+//  updatedAt DateTime @updatedAt
+//  title     String   @db.VarChar(255)
+//  content   String?
+//  published Boolean  @default(false)
+//  author    User     @relation(fields: [authorId], references: [id])
+//  authorId  String   @db.Uuid
+//
+//  @@map("posts")
+//}
+
+model Profile {
+  id        String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  firstName String?
+  lastName  String
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String  @unique @db.Uuid
+
+  @@map("profiles")
+}
+
+model Resource {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  @@map("resources")
+}
+
+model Role {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  @@map("roles")
+}
+
+model Permission {
+  id String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+
+  @@map("permissions")
+}
+
+model User {
+  id       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email    String    @unique
+  password String
+  profile  Profile?
+  employee Employee?
+
+  @@map("users")
+}
+
+model Employee {
+  id     String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique @db.Uuid
+
+  @@map("employees")
+}
+
+model OrganizationGroup {
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizations Organization[]
+
+  @@map("organization_groups")
+}
+
+model Organization {
+  id                  String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationGroup   OrganizationGroup    @relation(fields: [organizationGroupId], references: [id])
+  organizationGroupId String               @db.Uuid
+  organizationBranch  OrganizationBranch[]
+
+  @@map("organizations")
+}
+
+model OrganizationBranch {
+  id                String              @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organization      Organization        @relation(fields: [organizationId], references: [id])
+  organizationId    String              @db.Uuid
+  organizationVenue OrganizationVenue[]
+
+  @@map("organization_branches")
+}
+
+model OrganizationVenue {
+  id                   String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationBranch   OrganizationBranch @relation(fields: [organizationBranchId], references: [id])
+  organizationBranchId String             @db.Uuid
+
+  @@map("organization_venues")
+}
+
+enum EmployeeType {
+  EMPLOYEE
+  MANAGER
+  OWNER
+}
